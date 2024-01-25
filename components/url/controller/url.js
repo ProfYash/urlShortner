@@ -13,6 +13,7 @@ const createURL = async (req, res, next) => {
       res.status(StatusCodes.BAD_REQUEST).json(longURL)
       return
     }
+    
     let newURL = new URLView(longURL)
     newURL = await createShortURL(newURL)
     const newURLData = await addURL(newURL)

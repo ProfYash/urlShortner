@@ -46,6 +46,9 @@ class URLView {
     }
 
   }
+  static async testLongurl(longURL){
+
+  }
   async addURL(transaction) {
     try {
       const url = await db.url.create(this, {
