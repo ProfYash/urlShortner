@@ -4,7 +4,7 @@ const URLERROR = require('../errors')
 const { Op } = require('sequelize')
 const uuid = require('uuid')
 const { url } = require('inspector')
-
+const ping = require('ping');
 class URLView {
   constructor(longURL) {
     this.longURL = longURL
@@ -28,6 +28,9 @@ class URLView {
       throw new URLERROR.BadRequestError(error)
     }
   }
+  static trimmURL(longURL) {
+    return longURL.replace(/^https?:\/\//, '')
+  }
   static async findLongUrl(shortURL) {
     try {
       const findURL = await db.url.findOne({
@@ -46,8 +49,13 @@ class URLView {
     }
 
   }
-  static async testLongurl(longURL){
-
+  static async testLongurl(longURL) {
+    if (longURL[longURL.length - 1] == '/') {
+      longURL = longURL.slice(0, longURL.length - 1)
+    }
+    let res = ping.promise.probe(longURL);
+    // console.log(await res);
+    return (await res).alive
   }
   async addURL(transaction) {
     try {

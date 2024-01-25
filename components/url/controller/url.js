@@ -1,5 +1,6 @@
 const { StatusCodes } = require('http-status-codes')
 const { URLView } = require('../../../view/url')
+const URLERROR = require('../../../errors/')
 const { addURL,
   createShortURL,
   findLongUrl } = require('../service/url')
@@ -10,10 +11,12 @@ const createURL = async (req, res, next) => {
   try {
     const longURL = req.body.longURL
     if (!longURL) {
-      res.status(StatusCodes.BAD_REQUEST).json(longURL)
-      return
+      throw URLERROR.BadRequestError('longURL must be specified')
     }
-    
+     longURL = URLView.trimmURL(longURL)
+    if (! await URLView.testLongurl(longURL)) {
+      throw URLERROR.BadRequestError('Url you submitted is no longer active or alive')
+    }
     let newURL = new URLView(longURL)
     newURL = await createShortURL(newURL)
     const newURLData = await addURL(newURL)
@@ -29,21 +32,14 @@ const getURL = async (req, res, next) => {
     const shortURL = process.env.BASE_URL + req.params.urlCode
 
     if (!shortURL) {
-      res
-        .status(StatusCodes.BAD_REQUEST)
-        .json({ error: 'shortURL must be specified' })
-      return
+      throw URLERROR.BadRequestError('shortURL must be specified')
     }
     const longUrl = await findLongUrl(shortURL)
     console.log(longUrl)
     if (!longUrl) {
-      res
-        .status(StatusCodes.BAD_REQUEST)
-        .json({ error: 'shortURL Not Found' })
-      return
+      throw URLERROR.NotFoundError('longUrl Not found')
     }
-
-    res.redirect(`https://${longUrl}`);
+    res.redirect(`http://${longUrl}`);
   } catch (error) {
     console.error(error)
     next(error)
